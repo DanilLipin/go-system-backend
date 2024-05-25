@@ -1,0 +1,9 @@
+port: "3000"
+
+db:
+  host:     "127.0.0.1"
+  port:     "5432"
+  username: "postgres"
+  password: "dalikudakenai12345"
+  dbname:   "my_project"
+  sslmode:  "disable"
