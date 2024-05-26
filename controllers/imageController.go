@@ -1,9 +1,12 @@
 package controllers
 
 import (
+	"image"
 	"log"
 	"math/rand"
+	"unicode/utf8"
 
+	"github.com/disintegration/letteravatar"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -36,4 +39,16 @@ func UploadPhoto(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"url": "http://localhost:3000/api/uploads/" + fileName,
 	})
+}
+
+// Генерация аватара пользователя
+func ProfilePhotoGenerator(first_name string) (image.Image, error) {
+	firstLetter, _ := utf8.DecodeLastRuneInString(first_name)
+
+	img, err := letteravatar.Draw(75, firstLetter, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return img, nil
 }

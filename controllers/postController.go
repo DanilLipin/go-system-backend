@@ -72,7 +72,7 @@ func UpdatePost(c *fiber.Ctx) error {
 	})
 }
 
-func UniquePost(c *fiber.Ctx) error {
+func PersonalPosts(c *fiber.Ctx) error {
 	cookie := c.Cookies("jwt")
 	id, _ := util.ParseJwt(cookie)
 	var post []models.Post
