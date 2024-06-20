@@ -14,7 +14,7 @@ func SearchPosts(c *fiber.Ctx) error {
 	db := database.DB
 
 	if query != "" {
-		db = db.Where("title LIKE ? OR description LIKE ?", "%"+query+"%", "%"+query+"%")
+		db = db.Where("title LIKE ? OR description LIKE ? AND is_submit = ? AND is_archive = ?", "%"+query+"%", "%"+query+"%", true, false)
 	}
 
 	if err := db.Preload("User").Preload("Category").Find(&posts).Error; err != nil {

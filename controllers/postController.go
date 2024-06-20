@@ -45,7 +45,7 @@ func AllPost(c *fiber.Ctx) error {
 	sortParam := c.Query("sort", "created_at_desc")
 
 	var getpost []models.Post
-	db := database.DB.Preload("User").Preload("Category").Where("is_submit = ?", true)
+	db := database.DB.Preload("User").Preload("Category").Where("is_submit = ? AND is_archive = ?", true, false)
 
 	switch sortParam {
 	case "created_at_asc":

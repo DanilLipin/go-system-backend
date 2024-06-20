@@ -27,7 +27,7 @@ func GetPostsByUserAndPriceRange(c *fiber.Ctx) error {
 	lowPrice := float32(price) * 0.8
 	highPrice := float32(price) * 1.2
 
-	if err := db.Where("user_id = ? AND is_submit = ? AND estimated_price BETWEEN ? AND ?", userId, true, lowPrice, highPrice).Find(&posts).Error; err != nil {
+	if err := db.Where("user_id = ? AND is_submit = ? AND is_archive = ? AND estimated_price BETWEEN ? AND ?", userId, true, false, lowPrice, highPrice).Find(&posts).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Ошибка получения объявлений",
 		})

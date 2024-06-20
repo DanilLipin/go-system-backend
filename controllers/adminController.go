@@ -69,7 +69,6 @@ func CreateAdmin(c *fiber.Ctx) error {
 		})
 	}
 
-	//Check email in db
 	database.DB.Where("email=?", strings.TrimSpace(data["email"].(string))).First(&userData)
 	if userData.Id != 0 {
 		c.Status(400)
