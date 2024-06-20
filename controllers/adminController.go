@@ -6,19 +6,49 @@ import (
 	"blogbackend/util"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func validateEmail(email string) bool {
-	Re := regexp.MustCompile(`[a-z0-9._%+\-]+@[a-z0-9._%+\-]+\.[a-z0-9._%+\-]`)
-	return Re.MatchString(email)
+func AdminLogout(c *fiber.Ctx) error {
+	expired := time.Now().Add(-time.Hour * 24)
+	c.Cookie(&fiber.Cookie{
+		Name:     "jwt",
+		Value:    "",
+		Expires:  expired,
+		HTTPOnly: true,
+	})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Вы вышли из системы"})
 }
 
-func Registration(c *fiber.Ctx) error {
+func GetNonSubmitPosts(c *fiber.Ctx) error {
+	var getpost []models.Post
+	database.DB.Preload("User").Preload("Category").Where("is_submit = ?", false).Find(&getpost)
+
+	return c.JSON(fiber.Map{
+		"data": getpost,
+	})
+}
+
+func SubmitPost(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	db := database.DB
+
+	if err := db.Model(&models.Post{}).Where("id = ?", id).Update("is_submit", true).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Не удалось подтвердить публикацию объявления",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Объявление подтверждено успешно",
+	})
+}
+
+func CreateAdmin(c *fiber.Ctx) error {
 	var data map[string]interface{}
 	var userData models.User
 	if err := c.BodyParser(&data); err != nil {
@@ -39,6 +69,7 @@ func Registration(c *fiber.Ctx) error {
 		})
 	}
 
+	//Check email in db
 	database.DB.Where("email=?", strings.TrimSpace(data["email"].(string))).First(&userData)
 	if userData.Id != 0 {
 		c.Status(400)
@@ -52,7 +83,7 @@ func Registration(c *fiber.Ctx) error {
 		LastName:  data["last_name"].(string),
 		Phone:     data["phone"].(string),
 		Email:     strings.TrimSpace(data["email"].(string)),
-		IsAdmin:   false,
+		IsAdmin:   true,
 	}
 
 	avatarPath := fmt.Sprintf("./uploads/profile-pictures/%s.png", strings.TrimSpace(data["email"].(string)))
@@ -70,60 +101,6 @@ func Registration(c *fiber.Ctx) error {
 	c.Status(200)
 	return c.JSON(fiber.Map{
 		"user":    user,
-		"message": "Аккаунт успешно создан!",
+		"message": "Аккаунт администратора успешно зарегистрирован",
 	})
-
-}
-
-func Login(c *fiber.Ctx) error {
-	var data map[string]string
-	if err := c.BodyParser(&data); err != nil {
-		fmt.Println("Не удалось получить тело запроса")
-	}
-
-	var user models.User
-	database.DB.Where("email=?", data["email"]).First(&user)
-	if user.Id == 0 {
-		c.Status(404)
-		return c.JSON(fiber.Map{
-			"message": "Неверный Email адрес",
-		})
-	}
-	if err := user.ComparePassword(data["password"]); err != nil {
-		c.Status(400)
-		return c.JSON(fiber.Map{
-			"message": "Неправильный пароль",
-		})
-	}
-
-	token, err := util.GenerateJWT(user)
-	if err != nil {
-		c.Status(fiber.StatusInternalServerError)
-		return nil
-	}
-
-	cookie := fiber.Cookie{
-		Name:     "jwt",
-		Value:    token,
-		Expires:  time.Now().Add(time.Hour * 24),
-		HTTPOnly: true,
-	}
-	c.Cookie(&cookie)
-
-	return c.JSON(fiber.Map{
-		"message": "Вы успешно вошли в систему!",
-		"user":    user,
-		"token":   token,
-	})
-
-}
-
-func Logout(c *fiber.Ctx) error {
-	expired := time.Now().Add(-time.Hour * 24)
-	c.Cookie(&fiber.Cookie{
-		Name:    "jwt",
-		Value:   "",
-		Expires: expired,
-	})
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Вы вышли из системы"})
 }

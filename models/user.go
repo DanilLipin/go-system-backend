@@ -1,15 +1,22 @@
 package models
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"time"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 type User struct {
-	Id           uint   `json:"id" db:"id"`
-	FirstName    string `json:"first_name" db:"first_name"`
-	LastName     string `json:"last_name" db:"last_name"`
-	Email        string `json:"email" db:"email"`
-	Password     []byte `lson:"-"`
-	Phone        string `json:"phone" db:"phone"`
-	ProfilePhoto string `json:"profilephoto" db:"profilephoto"`
+	Id           uint       `json:"id" gorm:"primaryKey"`
+	FirstName    string     `json:"first_name"`
+	LastName     string     `json:"last_name"`
+	Email        string     `json:"email" gorm:"unique"`
+	Password     []byte     `json:"-"`
+	Phone        string     `json:"phone"`
+	ProfilePhoto string     `json:"profile_photo"`
+	IsAdmin      bool       `json:"is_admin"`
+	CreatedAt    *time.Time `json:"created_at" gorm:"not null;default:now()"`
+	Posts        []Post     `json:"posts"`
 }
 
 func (user *User) SetPassword(password string) {
